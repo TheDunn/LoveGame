@@ -1,33 +1,25 @@
 Car = Object.extend(Object)
 
-function Car.new(self, character, map)
-    -- load character sprite
+function Car.new(self, character, tilemap_file, startX, startY)
+    -- Load character sprite
     self.character = character
     self.sprite = love.graphics.newImage(string.format("assets/characters/%s.png", character))
     self.x_size = self.sprite:getWidth()
     self.y_size = self.sprite:getHeight()
 
-    -- init position & physics variables
-    self.pos = Vector2D(0, 0)  -- Initialize with a default position
+    -- Initialize position & physics variables
+    self.pos = Vector2D(startX or 0, startY or 0)  -- Use provided position or default to (0,0)
     self.vel = Vector2D(0, 0)
 
-    self.normal_acceleration = 200
-    self.drag_active = 0.9
-    self.drag_passive = 0.7
+    -- Movement settings
+    self.normal_acceleration = 100000
     self.max_speed = 800
-    self.max_speed_sq = self.max_speed * self.max_speed
-    self.boost_speed = 1200
-    self.has_boost = true
 
-    -- Load the tilemap and generate the path
-    self.tilemap = self:loadTilemap(map)
-    self.path = self:generatePath()
-
-    -- Set car's starting position to the first road tile (if available)
-    self:setStartPosition()
-
-    -- Set the initial path index
-    self.path_index = 1
+    -- Tilemap and car path
+    self.tilemap = self:loadTilemap(tilemap_file)
+    self.path = self:generatePath() -- Generate the path based on the tilemap
+    self.path_index = 1 -- Start from the first point in the path
+    self.is_destroyed = false
 end
 
 -- Function to set the car's starting position to the first road tile ('R')
@@ -35,7 +27,7 @@ function Car.setStartPosition(self)
     for y = 1, self.tilemap.height do
         for x = 1, self.tilemap.width do
             if self.tilemap.tiles[y][x] == "R" then
-                self.pos = Vector2D(x * 16, y * 16)
+                self.pos = Vector2D(x * 16, (y * 16) + 6)
                 return
             end
         end
@@ -75,7 +67,7 @@ function Car.generatePath(self)
     for y = 1, self.tilemap.height do
         for x = 1, self.tilemap.width do
             if self.tilemap.tiles[y][x] == "R" then
-                table.insert(path, Vector2D(x * tile_size, y * tile_size))
+                table.insert(path, Vector2D(x * tile_size, (y * tile_size) + 6))
             end
         end
     end
@@ -84,8 +76,8 @@ function Car.generatePath(self)
 end
 
 function Car.update(self, dt)
-    if #self.path == 0 then 
-        return 
+    if #self.path == 0 then
+        return
     end
 
     local target = self.path[self.path_index]
@@ -94,7 +86,7 @@ function Car.update(self, dt)
         return
     end
 
-    local direction = target:copy()  
+    local direction = target:copy()
     direction:subtract(self.pos)
 
     local distance = direction:magnitude()
@@ -103,6 +95,7 @@ function Car.update(self, dt)
         self.path_index = self.path_index + 1
         if self.path_index > #self.path then
             self.path_index = 1
+            self.is_destroyed = true
         end
         target = self.path[self.path_index]
 
@@ -110,7 +103,7 @@ function Car.update(self, dt)
             return
         end
 
-        direction = target:copy()  
+        direction = target:copy()
         direction:subtract(self.pos)
     end
 
@@ -118,19 +111,21 @@ function Car.update(self, dt)
         direction:normalise()
     end
 
-    self.vel:add(direction:scale(self.normal_acceleration * dt)) 
+    direction:scale(self.normal_acceleration * dt)
+    self.vel:add(direction) 
 
     if self.vel:magnitude() > self.max_speed then
         self.vel:normalise()
         self.vel:scale(self.max_speed)
     end
 
-    self.pos:add(self.vel:scale(dt))
+    self.vel:scale(dt)
+    self.pos:add(self.vel)
 end
 
 function Car.draw(self)
     local rounded_x = math.floor(self.pos.x - self.x_size / 2)
     local rounded_y = math.floor(self.pos.y - self.y_size / 2)
 
-    love.graphics.draw(self.sprite, rounded_x, rounded_y)
+    love.graphics.draw(self.sprite, rounded_x, rounded_y, math.rad(90))
 end

@@ -2,6 +2,11 @@
 -- TODO: https://love2d.org/wiki/Canvas, https://sheepolution.com/learn/book/22
 
 local json = require "json"
+local cars = {}  -- List of cars
+local spawnTimer = 0
+local spawnIntervalMin = 0.3
+local spawnIntervalMax = 1
+local carCount = 0
 
 function love.load()
     Object = require "classic"
@@ -10,7 +15,6 @@ function love.load()
     require "tileset"
     require "tilemap"
     require "canvas"
-    require "player"
     require "car"
     require "cartire"
 
@@ -36,17 +40,30 @@ function love.load()
     world = love.physics.newWorld(0, 0, true) -- no gravity, bodies are able to sleep
 
     -- initialise player
-    player = CarTire(world, 2, 0.5, 100, -20, 150, 2.5, "van")
-    -- player = Player("van")
+    -- player = CarTire(world, 2, 0.5, 100, -20, 150, 2.5, "van")
 
-    -- initialise other cars
-    --car = Car("van", "assets/maps/road.txt")
+    spawnTimer = math.random(spawnIntervalMin * 1000, spawnIntervalMax * 1000) / 1000
 end
 
 function love.update(dt)
-    --player:update(dt)
-    -- car:update(dt)
-    player:update()
+
+
+    --NPC car spawn timer
+    spawnTimer = spawnTimer - dt
+    if spawnTimer <= 0 then
+        table.insert(cars, Car("van", "assets/maps/road.txt", 0, 8 * 16))
+        carCount = carCount + 1
+
+        spawnTimer = math.random(spawnIntervalMin * 1000, spawnIntervalMax * 1000) / 1000
+    end
+
+    for i = #cars, 1, -1 do
+        local car = cars[i]
+        car:update(dt)
+        if car.is_destroyed then
+            table.remove(cars, i)  -- Remove destroyed car from the list
+        end
+    end
 end
 
 function love.draw()   
@@ -55,6 +72,9 @@ function love.draw()
     draw_canvas(canvas, 0, 0)
     love.graphics.pop()
     love.graphics.scale(1.5)
-    player:draw()
-    --car:draw()
+    
+    -- Draw all cars
+    for _, car in ipairs(cars) do
+        car:draw()
+    end
 end
