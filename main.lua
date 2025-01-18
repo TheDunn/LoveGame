@@ -77,8 +77,6 @@ function love.draw()
     love.graphics.push()
     love.graphics.scale(2)
     draw_canvas(canvas, 0, 0)
-    love.graphics.pop()
-    love.graphics.scale(1.5)
 
     terry:draw()
     
@@ -87,4 +85,5 @@ function love.draw()
         -- car:drawPath()
         car:draw()
     end
+    love.graphics.pop()
 end

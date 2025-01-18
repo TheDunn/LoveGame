@@ -150,8 +150,8 @@ end
 
 function Car.draw(self)
     -- Calculate the position to draw the sprite in the middle
-    local rounded_x = math.floor(self.pos.x - self.x_size / 2) - 8
-    local rounded_y = math.floor(self.pos.y - self.y_size / 2) + 5
+    local rounded_x = math.floor(self.pos.x - self.x_size / 2) + 14
+    local rounded_y = math.floor(self.pos.y - self.y_size / 2) + 14
 
     -- Draw the sprite with the correct rotation (adjusted pivot at the center)
     love.graphics.draw(self.sprite, rounded_x, rounded_y, self.rotation + math.pi / 2, 1, 1, self.x_size / 2, self.y_size / 2)
