@@ -7,7 +7,8 @@ function Car.new(self, character)
     self.x_size = self.sprite:getWidth()
     self.y_size = self.sprite:getHeight()
 
-    local mapFile = math.random(1, 2) == 1 and "assets/maps/road.txt" or "assets/maps/road2.txt"
+    --TEMP
+    local mapFile = math.random(1, 3) == 1 and "assets/maps/road.txt" or (math.random(1, 2) == 1 and "assets/maps/road2.txt" or "assets/maps/road3.txt")
 
     -- Tilemap
     self.tilemap = self:loadTilemap(mapFile)
@@ -33,7 +34,7 @@ function Car.getStartPosition(self, character)
     for y = 1, self.tilemap.height do
         for x = 1, self.tilemap.width do
             if self.tilemap.tiles[y][x] == character then
-                return (x * 16) - 32, y * 16
+                return x * 16, y * 16
             end
         end
     end
@@ -87,7 +88,7 @@ function Car.generatePath(self)
     end
 
     local function tracePath(x, y)
-        table.insert(path, Vector2D((x * 16) - 32, (y * 16) - 11))
+        table.insert(path, Vector2D(x * 16, y * 16))
         visited[y * self.tilemap.width + x] = true
 
         local directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}}
@@ -149,8 +150,8 @@ end
 
 function Car.draw(self)
     -- Calculate the position to draw the sprite in the middle
-    local rounded_x = math.floor(self.pos.x - self.x_size / 2) + 16
-    local rounded_y = math.floor(self.pos.y - self.y_size / 2) + 16
+    local rounded_x = math.floor(self.pos.x - self.x_size / 2) - 8
+    local rounded_y = math.floor(self.pos.y - self.y_size / 2) + 5
 
     -- Draw the sprite with the correct rotation (adjusted pivot at the center)
     love.graphics.draw(self.sprite, rounded_x, rounded_y, self.rotation + math.pi / 2, 1, 1, self.x_size / 2, self.y_size / 2)
@@ -159,8 +160,8 @@ end
 function Car.drawPath(self)
     for i = 1, #self.path - 1 do
         local p1, p2 = self.path[i], self.path[i + 1]
-        love.graphics.setColor(1, 0, 0, 1)  -- Semi-transparent green
+        love.graphics.setColor(1, 0, 0, 1) 
         love.graphics.line(p1.x, p1.y, p2.x, p2.y)
     end
-    love.graphics.setColor(1, 1, 1)  -- Reset color
+    love.graphics.setColor(1, 1, 1)
 end
