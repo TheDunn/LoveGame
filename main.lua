@@ -4,8 +4,8 @@
 local json = require "json"
 local cars = {}  -- List of cars
 local spawnTimer = 0
-local spawnIntervalMin = 0.3
-local spawnIntervalMax = 1
+local spawnIntervalMin = 0.5
+local spawnIntervalMax = 2
 local carCount = 0
 
 function love.load()
@@ -46,14 +46,16 @@ function love.load()
 end
 
 function love.update(dt)
-
-
     --NPC car spawn timer
     spawnTimer = spawnTimer - dt
     if spawnTimer <= 0 then
-        table.insert(cars, Car("van", "assets/maps/road.txt", 0, 8 * 16))
-        carCount = carCount + 1
-
+        local car = Car("van")
+        if car then
+            table.insert(cars, car)
+            carCount = carCount + 1
+        else
+            print("Warning: Failed to create car instance.")
+        end
         spawnTimer = math.random(spawnIntervalMin * 1000, spawnIntervalMax * 1000) / 1000
     end
 
@@ -66,15 +68,16 @@ function love.update(dt)
     end
 end
 
-function love.draw()   
+function love.draw()
     love.graphics.push()
-    love.graphics.scale(2) 
+    love.graphics.scale(2)
     draw_canvas(canvas, 0, 0)
     love.graphics.pop()
     love.graphics.scale(1.5)
     
     -- Draw all cars
     for _, car in ipairs(cars) do
+        -- car:drawPath()
         car:draw()
     end
 end
