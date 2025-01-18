@@ -17,6 +17,7 @@ function love.load()
     require "canvas"
     require "car"
     require "cartire"
+    require "terry"
 
     love.graphics.setDefaultFilter("nearest", "nearest")
     tileset = TileSet:new("assets/tiles/tilemap.png", 16)
@@ -43,10 +44,14 @@ function love.load()
     -- player = CarTire(world, 2, 0.5, 100, -20, 150, 2.5, "van")
 
     spawnTimer = math.random(spawnIntervalMin * 1000, spawnIntervalMax * 1000) / 1000
+
+    terry = Terry("terryshadow_1")
+
 end
 
 function love.update(dt)
     --NPC car spawn timer
+    
     spawnTimer = spawnTimer - dt
     if spawnTimer <= 0 then
         local car = Car("van")
@@ -74,6 +79,8 @@ function love.draw()
     draw_canvas(canvas, 0, 0)
     love.graphics.pop()
     love.graphics.scale(1.5)
+
+    terry:draw()
     
     -- Draw all cars
     for _, car in ipairs(cars) do
