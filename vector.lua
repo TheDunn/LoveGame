@@ -35,6 +35,15 @@ function Vector2D.subtract(self, vector)
     self.y = self.y - vector.y
 end
 
+function Vector2D.dot_product(self, vector)
+	return self.x * vector.x + self.y * vector.y
+end
+
+function Vector2D.project_onto(self, vector)
+    scale = self:dot_product(vector) / vector:dot_product(vector)
+    return Vector2D(scale * vector.x, scale * vector.y)
+end
+
 function Vector2D.copy(self)
     return Vector2D(self.x, self.y)
 end
