@@ -8,20 +8,38 @@ function Car.new(self, character, map)
     self.y_size = self.sprite:getHeight()
 
     -- init position & physics variables
-    self.pos = Vector2D(0, 0)
+    self.pos = Vector2D(0, 0)  -- Initialize with a default position
     self.vel = Vector2D(0, 0)
 
     self.normal_acceleration = 200
-	self.drag_active = 0.9
-	self.drag_passive = 0.7
-	self.max_speed = 800
-	self.max_speed_sq = self.max_speed * self.max_speed
-	self.boost_speed = 1200
-	self.has_boost = true
+    self.drag_active = 0.9
+    self.drag_passive = 0.7
+    self.max_speed = 800
+    self.max_speed_sq = self.max_speed * self.max_speed
+    self.boost_speed = 1200
+    self.has_boost = true
 
+    -- Load the tilemap and generate the path
     self.tilemap = self:loadTilemap(map)
-    self.path = self:generatePath() -- Generate the path based on the tilemap
+    self.path = self:generatePath()
+
+    -- Set car's starting position to the first road tile (if available)
+    self:setStartPosition()
+
+    -- Set the initial path index
     self.path_index = 1
+end
+
+-- Function to set the car's starting position to the first road tile ('R')
+function Car.setStartPosition(self)
+    for y = 1, self.tilemap.height do
+        for x = 1, self.tilemap.width do
+            if self.tilemap.tiles[y][x] == "R" then
+                self.pos = Vector2D(x * 16, y * 16)
+                return
+            end
+        end
+    end
 end
 
 -- Function to load tilemap from a .txt file
@@ -52,51 +70,67 @@ end
 -- Function to generate path from road tiles ('R') in the tilemap
 function Car.generatePath(self)
     local path = {}
-    local tile_size = 32  -- Assuming tile size of 32x32
+    local tile_size = 16
+
     for y = 1, self.tilemap.height do
         for x = 1, self.tilemap.width do
             if self.tilemap.tiles[y][x] == "R" then
-                print(x, y)
-                -- Add the position of road tiles to the path (scaled by tile size)
                 table.insert(path, Vector2D(x * tile_size, y * tile_size))
             end
         end
     end
+
     return path
 end
 
--- Update the car's position to follow the path
 function Car.update(self, dt)
-    -- Check if there's a path to follow
-    if #self.path == 0 then return end
+    if #self.path == 0 then 
+        return 
+    end
 
     local target = self.path[self.path_index]
-    local direction = target - self.pos
-    local distance = direction:length()
+
+    if not target then
+        return
+    end
+
+    local direction = target:copy()  
+    direction:subtract(self.pos)
+
+    local distance = direction:magnitude()
 
     if distance < 5 then
         self.path_index = self.path_index + 1
         if self.path_index > #self.path then
-            self.path_index = 1 -- loop the path if you want to make the car go in a loop
+            self.path_index = 1
         end
         target = self.path[self.path_index]
-        direction = target - self.pos
+
+        if not target then
+            return
+        end
+
+        direction = target:copy()  
+        direction:subtract(self.pos)
     end
 
-    -- Normalize the direction vector
-    direction:normalizeInplace()
-
-    -- Apply acceleration to move towards the target
-    self.vel = self.vel + direction * self.normal_acceleration * dt
-    if self.vel:length() > self.max_speed then
-        self.vel:normalizeInplace()
-        self.vel = self.vel * self.max_speed
+    if distance > 0 then
+        direction:normalise()
     end
 
-    -- Update position based on velocity
-    self.pos = self.pos + self.vel * dt
+    self.vel:add(direction:scale(self.normal_acceleration * dt)) 
+
+    if self.vel:magnitude() > self.max_speed then
+        self.vel:normalise()
+        self.vel:scale(self.max_speed)
+    end
+
+    self.pos:add(self.vel:scale(dt))
 end
 
 function Car.draw(self)
-    love.graphics.draw(self.sprite, round(self.pos.x - self.x_size/2), round(self.pos.y - self.y_size/2))
+    local rounded_x = math.floor(self.pos.x - self.x_size / 2)
+    local rounded_y = math.floor(self.pos.y - self.y_size / 2)
+
+    love.graphics.draw(self.sprite, rounded_x, rounded_y)
 end
