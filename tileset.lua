@@ -1,6 +1,6 @@
-local GrassTile = require "Tiles/GrassTile"
-local RoadTile = require "Tiles/RoadTile"
-local TreeTile = require "Tiles/TreeTile"
+local GrassTile = require "Tiles/grasstile"
+local RoadTile = require "Tiles/roadtile"
+local TreeTile = require "Tiles/treetile"
 
 TileSet = {}
 TileSet.__index = TileSet
