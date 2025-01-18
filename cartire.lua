@@ -9,14 +9,14 @@ function CarTire.new(
     thickness,
     max_forward_speed,
     max_backward_speed,
-    max_drive_force
+    max_drive_force,
     max_lateral_impulse,
     img_name
 )
     self.body = love.physics.newBody(world, 0, 0, "dynamic")  -- pos = (0, 0)
     local rect = love.physics.newRectangleShape(thickness, diameter)
     self.fixture = love.physics.newFixture(self.body, rect, 1)  -- density = 1
-    self.body.setUserData(self)
+    -- self.body.setUserData(self)
 
     self.max_forward_speed = max_forward_speed
     self.max_backward_speed = max_backward_speed
@@ -56,7 +56,7 @@ end
 function CarTire.update_friction(self)
     -- kill lateral velocity
     impulse_vec = self.get_lateral_velocity()
-    impulse_vec.scale(-self.body.GetMass())
+    impulse_vec.scale(-self.body.getMass())
     if impulse_vec.magnitude() > self.max_lateral_impulse then
         impulse_vec.scale(self.max_lateral_impulse / impulse_vec.magnitude())
     end
@@ -119,7 +119,7 @@ function CarTire.update_turn(self, input_left, input_right)
     self.body.applyTorque(desired_torque)
 end
 
-function update(self)
+function CarTire.update(self)
     -- TODO: move this
     input_forward = love.keyboard.isDown("up") or love.keyboard.isDown("w")
     input_reverse = love.keyboard.isDown("down") or love.keyboard.isDown("s")
