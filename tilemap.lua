@@ -1,27 +1,30 @@
-TileMap = Object.extend(Object)
+TileMap = {}
+TileMap.__index = TileMap
 
-function TileMap.new(self, name)
-    -- load tilemap from txt file
-    local map_file = io.open(string.format("assets/maps/%s.txt", name), "r")
-    self.map = {}
-    for line in map_file:lines() do
-        local row = {}
-        for tile_ch in string.gmatch(line, ".") do
-            table.insert(row, tonumber(tile_ch))
-        end
-        table.insert(self.map, row)
-    end
-    map_file:close()
+function TileMap:new(mapData)
+    local self = setmetatable({}, TileMap)
+    self.width = #mapData[1]
+    self.height = #mapData
+    self.layers = mapData  -- Each entry in mapData is a layer of tiles
+    return self
 end
 
-function TileMap.draw(self, tileset, x_init, y_init)
-    for i,row in ipairs(self.map) do
-        for j,tile in ipairs(row) do
-            tileset.draw_tile(
-                tileset, tile,
-                x_init + (j-1) * tileset.tile_size,
-                y_init + (i-1) * tileset.tile_size
-            )
+-- Draw function, rendering each layer in order
+function TileMap:draw(tileSet, offsetX, offsetY)
+    for _, layer in ipairs(self.layers) do
+        for y = 1, #layer do
+            for x = 1, #layer[y] do
+                local tileName = layer[y][x]
+                local tile = tileSet:getTileByName(tileName)
+                if tile then
+                    love.graphics.draw(
+                        tileSet.image,
+                        tile.quad,
+                        (x - 1) * tileSet.tileWidth + offsetX,
+                        (y - 1) * tileSet.tileHeight + offsetY
+                    )
+                end
+            end
         end
     end
 end

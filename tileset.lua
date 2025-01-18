@@ -1,42 +1,31 @@
-TileSet = Object.extend(Object)
+local GrassTile = require "Tiles/GrassTile"
+local RoadTile = require "Tiles/RoadTile"
+local TreeTile = require "Tiles/TreeTile"
 
-function TileSet.new(self, name, tile_size)
-    -- load tileset data
-    self.name = name
-    self.img = love.graphics.newImage(string.format("assets/tiles/%s.png", name))
-    self.tile_size = tile_size
-    self.img_width = self.img:getWidth()
-    self.img_height = self.img:getHeight()
+TileSet = {}
+TileSet.__index = TileSet
 
-    assert(
-        self.img_width % tile_size == 0,
-        "tileset image width must be a whole multiple of tile_size"
-    )
-    assert(
-        self.img_height % tile_size == 0,
-        "tileset image height must be a whole multiple of tile_size"
-    )
-
-    -- create tileset table
+function TileSet:new(imagePath, tileSize)
+    local self = setmetatable({}, TileSet)
+    self.image = love.graphics.newImage(imagePath)
+    self.tileWidth = tileSize
+    self.tileHeight = tileSize
     self.tiles = {}
-    for row = 0, (self.img_height / tile_size) - 1 do
-        for col = 0, (self.img_width / tile_size) - 1 do
-            table.insert(
-                self.tiles,
-                love.graphics.newQuad(
-                    col * tile_size, row * tile_size,
-                    tile_size, tile_size,
-                    self.img_width, self.img_height
-                )
-            )
-        end
-    end
+
+    self.tiles["GrassTile"] = GrassTile:new(1, 1, tileSize, self.image)
+    self.tiles["RoadTile"] = RoadTile:new(9, 16, tileSize, self.image)
+    self.tiles["TreeTile"] = TreeTile:new(22, 9, tileSize, self.image)
+    self.tiles["TreeTile1"] = TreeTile:new(22, 10, tileSize, self.image)
+
+    self.tiles["RoadTileHorTop"] = RoadTile:new(1, 15, tileSize, self.image)
+    self.tiles["RoadTileHor"] = RoadTile:new(1, 16, tileSize, self.image)
+    self.tiles["RoadTileHorBottom"] = RoadTile:new(1, 17, tileSize, self.image)
+
+    self.tiles["RoadTileTurnLeftTop"] = RoadTile:new(8, 17, tileSize, self.image)
+
+    return self
 end
 
-function TileSet.draw_tile(self, tile, x_pos, y_pos)
-    assert (
-        tile >= 1 and tile <= #self.tiles,
-        string.format("tile index %d out of range", tile)
-    )
-    love.graphics.draw(self.img, self.tiles[tile], x_pos, y_pos)
+function TileSet:getTileByName(name)
+    return self.tiles[name]
 end
