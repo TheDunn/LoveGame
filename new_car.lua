@@ -1,4 +1,5 @@
 Wheel = Object.extend(Object)
+-- https://github.com/domasx2/gamejs-box2d-car-example
 
 function Wheel.new(
     self,
