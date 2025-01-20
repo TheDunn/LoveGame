@@ -6,15 +6,19 @@
         <style>
             #map {
                 display: grid;
-                overflow: auto;
                 background-color: lightgray;
                 border: 1px solid lightgray;
-                gap: 1px;
+                gap: var(--gap-size, 1px);
+                transform-origin: top left;
                 position: relative;
+                margin: auto;
             }
             .tile {
                 background-color: aliceblue;
                 cursor: pointer;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
             .tile:hover {
                 border: 2px solid red;
@@ -36,13 +40,10 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                justify-content: center;
                 position: relative;
-                overflow: auto; 
-                width: 100%;
-                cursor: grab;
-            }
-            .mapRender.dragging {
-                cursor: grabbing;
+                overflow: auto;
+                padding: 10px;
             }
         </style>
     </head>
@@ -157,7 +158,9 @@
             initializeMap(cols, rows);
 
             map.innerHTML = '';
-            map.style.gridTemplateColumns = `repeat(${cols}, ${tileSize + 1}px)`;
+            map.style.gridTemplateColumns = `repeat(${cols}, ${tileSize}px)`;
+            map.style.gridTemplateRows = `repeat(${rows}, ${tileSize}px)`;
+            map.style.setProperty('--gap-size', `${gapSize}px`);
 
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < cols; j++) {     
@@ -167,6 +170,7 @@
                     tile.dataset.y = i;
                     tile.style.width = `${tileSize}px`;
                     tile.style.height = `${tileSize}px`;
+
                     tile.addEventListener('click', function() {
                         if (selectedTile && mapTiles[currentLayer][i][j]?.name !== selectedTile?.name) {
                             mapTiles[currentLayer][i][j] = selectedTile;
@@ -387,45 +391,40 @@
 
         let zoomLevel = 1;
         const zoomStep = 0.1;
-        const zoomMin = 0.5;
+        const zoomMin = 0.1;
         const zoomMax = 3;
-
         const map = document.getElementById('map');
-        const mapRender = document.querySelector('.mapRender');
 
-        function updateZoom(focusX, focusY, deltaZoom) {
-            const prevZoomLevel = zoomLevel;
+        document.querySelector('.mapRender').addEventListener('wheel', (e) => {
+            e.preventDefault();
+
+            const deltaZoom = e.deltaY < 0 ? zoomStep : -zoomStep;
             zoomLevel = Math.min(Math.max(zoomLevel + deltaZoom, zoomMin), zoomMax);
 
-            const zoomRatio = zoomLevel / prevZoomLevel;
-
-            const rect = map.getBoundingClientRect();
-            const offsetX = focusX - rect.left;
-            const offsetY = focusY - rect.top;
-
-            const currentTransform = getComputedStyle(map).transform;
-            const matrix = currentTransform === "none" ? [1, 0, 0, 1, 0, 0] : currentTransform.match(/matrix.*\((.+)\)/)[1].split(', ').map(Number);
-
-            const translateX = matrix[4];
-            const translateY = matrix[5];
-
-            const newTranslateX = offsetX - (offsetX - translateX) * zoomRatio;
-            const newTranslateY = offsetY - (offsetY - translateY) * zoomRatio;
-
-            map.style.transform = `scale(${zoomLevel}) translate(${newTranslateX / zoomLevel}px, ${newTranslateY / zoomLevel}px)`;
-        }
-
-        mapRender.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const deltaZoom = e.deltaY < 0 ? zoomStep : -zoomStep;
-            updateZoom(e.clientX, e.clientY, deltaZoom);
+            map.style.transform = `scale(${zoomLevel})`;
         });
 
         document.getElementById('resetZoom').addEventListener('click', () => {
             zoomLevel = 1;
-            currentTranslateX = 0;
-            currentTranslateY = 0;
-            map.style.transform = `scale(${zoomLevel}) translate(0px, 0px)`;
+            map.style.transform = `scale(1)`;
         });
+
+        const mapWrapper = document.getElementById('mapWrapper');
+        const mapRender = document.querySelector('.mapRender');
+
+        function adjustMapPadding() {
+            const mapWidth = map.offsetWidth;
+            const mapHeight = map.offsetHeight;
+            const renderWidth = mapRender.clientWidth;
+            const renderHeight = mapRender.clientHeight;
+
+            const horizontalPadding = Math.max((renderWidth - mapWidth) / 2, 0);
+            const verticalPadding = Math.max((renderHeight - mapHeight) / 2, 0);
+
+            mapRender.style.padding = `${verticalPadding}px ${horizontalPadding}px`;
+        }
+
+        window.addEventListener('resize', adjustMapPadding);
+        adjustMapPadding();
     </script>
 </html>
