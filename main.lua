@@ -75,7 +75,6 @@ end
 
 function love.draw()
     love.graphics.push()
-    love.graphics.scale(2)
     draw_canvas(canvas, 0, 0)
 
     terry:draw()
