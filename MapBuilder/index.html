@@ -95,17 +95,21 @@
                         <div id="tiles" class="p-3 d-flex flex-wrap gap-1">
                         </div>
                     </div>      
-                    <div class="card">       
+                    <div class="card hidden" style="display: none;">       
                         <div class="card-header">
                             <b>Import/Export</b>
                         </div>
-                        <div class="p-3 d-flex flex-wrap gap-1">
-                        
+                        <div class="p-3">
+                            <button class="btn btn-primary" id="exportMap">Export to JSON</button>
+                            <div class="mt-3" >
+                                <label class="form-label">Import JSON</label>
+                                <input type="file" id="tilemapImport" class="form-control" accept="application/json" />
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-8">
-                    <div id="mapWrapper" class="card" style="display: none; position: relative;">
+                    <div id="mapWrapper" class="hidden card" style="display: none; position: relative;">
                         <div class="card-header">
                             <button id="fillMap" class="btn btn-primary btn-sm">Fill with currently selected</button>
                             <button id="undoButton" class="btn btn-secondary btn-sm">Undo</button>
@@ -134,6 +138,7 @@
         let isMouseDown = false;
         let mapTiles = [];
         let historyStack = [];
+        let tilesData = [];
 
         function initializeMap(cols, rows) {
             mapTiles = Array.from({ length: maxLayers + 1 }, () => 
@@ -223,7 +228,7 @@
 
             saveMapState();
             updateLayer();
-            document.getElementById('mapWrapper').style.display = 'block';
+            Array.from(document.querySelectorAll('.hidden')).forEach(el => el.style.display = 'block');
         });
 
         function configureTiles(file) {
@@ -286,11 +291,17 @@
                             tileImg.style.width = `${tileSize}px`;
                             tileImg.style.height = `${tileSize}px`;
 
+                            const tileData = {
+                                url: tileDataURL,
+                                name: tileName,
+                                x: x,
+                                y: y
+                            };
+
+                            tilesData.push(tileData);
+
                             tileImg.addEventListener('click', function() {
-                                selectedTile = {
-                                    url: tileDataURL,
-                                    name: tileName
-                                };
+                                selectedTile = tileData;
                                 const allTiles = document.querySelectorAll('.draggable-tile');
                                 allTiles.forEach(img => img.classList.remove('selected'));
                                 tileImg.classList.add('selected');
@@ -301,7 +312,6 @@
                     }
                 };
             };
-
             reader.readAsDataURL(file);
         }
 
@@ -359,7 +369,7 @@
             const cols = parseInt(document.getElementById('mapWidth').value) || 0;
             const rows = parseInt(document.getElementById('mapHeight').value) || 0;
 
-            if (selectedTile) {
+        if (selectedTile) {
                 let makeUpdate = false;
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) { 
@@ -400,6 +410,104 @@
             renderLayerTiles();
         }
 
+        // Export
+        document.getElementById('exportMap').addEventListener('click', exportTilemap);
+
+        function exportTilemap() {
+            const mapWidth = parseInt(document.getElementById('mapWidth').value) || 10;
+            const mapHeight = parseInt(document.getElementById('mapHeight').value) || 10;
+
+            let tilemap = [];
+
+            for (let layerIndex = 0; layerIndex <= maxLayers; layerIndex++) {
+                let layer = [];
+
+                for (let row = 0; row < mapHeight; row++) {
+                    let tileRow = [];
+                    for (let col = 0; col < mapWidth; col++) {
+                        const tile = mapTiles[layerIndex][row][col];
+                        tileRow.push(tile ? tile.name : null);
+                    }
+                    layer.push(tileRow);
+                }
+
+                tilemap.push(layer);
+            }
+            const json = JSON.stringify(tilemap);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tilemap.json';
+            a.click();
+
+            URL.revokeObjectURL(url);
+        }
+
+        //Import
+        document.getElementById('tilemapImport').addEventListener('change', importTilemap);
+
+        function importTilemap(event) {
+            const file = event.target.files[0]; 
+            if (!file) {
+                alert('Please select a valid JSON file.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const json = e.target.result;
+                    const tilemap = JSON.parse(json);
+
+                    if (!Array.isArray(tilemap)) {
+                        alert('Invalid tilemap format.');
+                        return;
+                    }
+
+                    loadTilemap(tilemap);
+                } catch (error) {
+                    alert('Error parsing JSON file: ' + error.message);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        function loadTilemap(tilemap) {
+            const mapWidth = parseInt(document.getElementById('mapWidth').value) || 0;
+            const mapHeight = parseInt(document.getElementById('mapHeight').value) || 0;
+            
+            mapTiles = [];
+            initializeMap(mapWidth, mapHeight);
+
+            for (let layerIndex = 0; layerIndex <= maxLayers; layerIndex++) {
+                const layer = tilemap[layerIndex];
+                if (!Array.isArray(layer)) continue;
+
+                for (let row = 0; row < mapHeight; row++) {
+                    const rowData = layer[row];
+                    if (!Array.isArray(rowData)) continue;
+
+                    for (let col = 0; col < mapWidth; col++) {
+                        const tileName = rowData[col];
+                        const selectedTile = tilesData.find(tile => tile.name === tileName);
+                        if (selectedTile) {
+                            mapTiles[layerIndex][row][col] = selectedTile;
+                        }
+                    }
+                }
+            }
+
+            currentLayer = 0;
+            saveMapState();
+            updateLayer();
+
+            document.getElementById('tilemapImport').value = '';
+        }
+
+        // Zoom
         let zoomLevel = 1;
         const zoomStep = 0.1;
         const zoomMin = 0.1;
