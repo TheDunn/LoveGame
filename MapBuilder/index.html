@@ -129,7 +129,7 @@
 
     <script>
         let currentLayer = 0;
-        let maxLayers = 10;
+        let maxLayers = 5;
         let selectedTile = null;
         let isMouseDown = false;
         let mapTiles = [];
@@ -329,15 +329,26 @@
             const tileSize = parseInt(document.getElementById('tileSize').value) || 0;
             const cols = parseInt(document.getElementById('mapWidth').value) || 0;
 
-            mapTiles[currentLayer].forEach((row, rowIndex) => {
-                row.forEach((tile, colIndex) => {
+            mapTiles[0].forEach((row, rowIndex) => {
+                row.forEach((_, colIndex) => {
                     const tileIndex = rowIndex * cols + colIndex;
                     const tileCell = tiles[tileIndex];
 
                     if (tileCell) {
-                        tileCell.style.backgroundImage = `url(${tile?.url || ''})`;
-                        tileCell.dataset.tile = tile?.name || '';
-                        tileCell.style.backgroundSize = `${tileSize}px ${tileSize}px`;
+                        let backgrounds = [];
+                        let backgroundSizes = [];
+
+                        for (let layer = currentLayer > 0 ? currentLayer - 1 : 0; layer <= currentLayer; layer++) {
+                            const tile = mapTiles[layer][rowIndex]?.[colIndex];
+                            if (tile && tile.url) {
+                                backgrounds.push(`url(${tile.url})`);
+                                backgroundSizes.push(`${tileSize}px ${tileSize}px`);
+                            }
+                        }
+
+                        tileCell.style.backgroundImage = backgrounds.reverse().join(', ');
+                        tileCell.style.backgroundSize = backgroundSizes.reverse().join(', ');
+                        tileCell.style.backgroundBlendMode = 'normal';
                     }
                 });
             });
