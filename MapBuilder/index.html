@@ -132,6 +132,11 @@
     </body>
 
     <script>
+        // TODO //
+        // Delete tile button
+        // Decreased opacity on lower layers
+        // Don't export level if entire level is null
+
         let currentLayer = 0;
         let maxLayers = 5;
         let selectedTile = null;
@@ -478,7 +483,7 @@
         function loadTilemap(tilemap) {
             const mapWidth = parseInt(document.getElementById('mapWidth').value) || 0;
             const mapHeight = parseInt(document.getElementById('mapHeight').value) || 0;
-            
+
             mapTiles = [];
             initializeMap(mapWidth, mapHeight);
 
