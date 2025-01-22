@@ -17,13 +17,12 @@ function love.load()
     require "canvas"
     require "car"
     require "cartire"
-    require "terry"
 
     love.graphics.setDefaultFilter("nearest", "nearest")
-    tileset = TileSet:new("assets/tiles/tilemap.png", 16)
+    tileset = TileSet:new("assets/tiles/tilemap.png", 16, 1)
 
     -- load tileset
-    local mapData = love.filesystem.read("assets/maps/example.json")
+    local mapData = love.filesystem.read("assets/maps/level.json")
     local map = json.parse(mapData)
 
     tilemap = TileMap:new(map)
@@ -44,9 +43,6 @@ function love.load()
     -- player = CarTire(world, 2, 0.5, 100, -20, 150, 2.5, "van")
 
     spawnTimer = math.random(spawnIntervalMin * 1000, spawnIntervalMax * 1000) / 1000
-
-    terry = Terry("terryshadow_1")
-
 end
 
 function love.update(dt)
@@ -75,9 +71,8 @@ end
 
 function love.draw()
     love.graphics.push()
+    love.graphics.scale(2)
     draw_canvas(canvas, 0, 0)
-
-    terry:draw()
     
     -- Draw all cars
     for _, car in ipairs(cars) do

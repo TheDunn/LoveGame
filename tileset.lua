@@ -1,42 +1,33 @@
-local GrassTile = require "Tiles/grasstile"
-local RoadTile = require "Tiles/roadtile"
-local TreeTile = require "Tiles/treetile"
+
 
 TileSet = {}
 TileSet.__index = TileSet
 
-function TileSet:new(imagePath, tileSize)
+function TileSet:new(imagePath, tileSize, gap)
+    require "tile"
+
     local self = setmetatable({}, TileSet)
     self.image = love.graphics.newImage(imagePath)
-    self.tileWidth = tileSize
-    self.tileHeight = tileSize
     self.tiles = {}
 
-    self.tiles["GrassTile"] = GrassTile:new(1, 1, tileSize, self.image)
-    self.tiles["RoadTile"] = RoadTile:new(9, 16, tileSize, self.image)
-    self.tiles["TreeTile"] = TreeTile:new(22, 9, tileSize, self.image)
-    self.tiles["TreeTile1"] = TreeTile:new(22, 10, tileSize, self.image)
+    self.tileWidth = tileSize;
+    self.tileHeight = tileSize;
 
-    self.tiles["RoadTileHorTopLeft"] = RoadTile:new(8, 17, tileSize, self.image)
-    self.tiles["RoadTileHorTopRight"] = RoadTile:new(7, 17, tileSize, self.image)
+    local sheetWidth = self.image:getWidth()
+    local sheetHeight = self.image:getHeight()
 
-    self.tiles["RoadTileHorTop"] = RoadTile:new(1, 15, tileSize, self.image)
-    self.tiles["RoadTileHor"] = RoadTile:new(1, 16, tileSize, self.image)
-    self.tiles["RoadTileHorBottom"] = RoadTile:new(1, 17, tileSize, self.image)
+    local numTilesX = math.floor(sheetWidth / tileSize)
+    local numTilesY = math.floor(sheetHeight / tileSize)
 
-    self.tiles["RoadTileHorTopCrossing"] = RoadTile:new(0, 15, tileSize, self.image)
-    self.tiles["RoadTileHorCrossing"] = RoadTile:new(0, 16, tileSize, self.image)
-    self.tiles["RoadTileHorBottomCrossing"] = RoadTile:new(0, 17, tileSize, self.image)
+    local tileIndex = 1
+    for y = 0, numTilesY - 1 do
+        for x = 0, numTilesX - 1 do
+            local tileName = "tile_" .. x .. "_" .. y
 
-    self.tiles["RoadTileHorBottomLeft"] = RoadTile:new(7, 16, tileSize, self.image)
-    self.tiles["RoadTileHorBottomRight"] = RoadTile:new(8, 16, tileSize, self.image)
-
-    self.tiles["RoadTileVerLeftCornerRight"] = RoadTile:new(5, 16, tileSize, self.image)
-    self.tiles["RoadTileVerLeft"] = RoadTile:new(2, 17, tileSize, self.image)
-    self.tiles["RoadTileVer"] = RoadTile:new(3, 17, tileSize, self.image)
-    self.tiles["RoadTileVerRight"] = RoadTile:new(4, 17, tileSize, self.image)
-
-    self.tiles["RoadTileTurnLeftTop"] = RoadTile:new(8, 17, tileSize, self.image)
+            self.tiles[tileName] = Tile:new(x, y, tileSize + gap, sheetWidth, sheetHeight)
+            tileIndex = tileIndex + 1
+        end
+    end
 
     return self
 end
