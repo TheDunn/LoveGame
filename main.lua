@@ -71,7 +71,7 @@ end
 
 function love.draw()
     love.graphics.push()
-    love.graphics.scale(2)
+    love.graphics.scale(4)
     draw_canvas(canvas, 0, 0)
     
     -- Draw all cars
